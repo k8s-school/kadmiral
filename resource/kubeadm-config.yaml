@@ -1,0 +1,13 @@
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: ClusterConfiguration
+apiServer:
+  extraArgs:
+  - name: enable-admission-plugins
+    value: AlwaysPullImages,DefaultStorageClass,LimitRanger,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota
+  - name: token-auth-file
+    value: /etc/kubernetes/auth/tokens.csv
+  extraVolumes:
+  - hostPath: /etc/kubernetes/auth
+    mountPath: /etc/kubernetes/auth
+    name: tokens
+kubernetesVersion: v1.32.7
