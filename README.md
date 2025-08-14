@@ -1,10 +1,10 @@
 # Pre-requisites
 
-A few Ubuntu instances with `ss` and `sudo` access
+A few Ubuntu instances with `ssh` and `sudo` access
 
 # Configure access to the instances
 
-Fill your  `~/.ssh/config` and then edit `MASTER` `NODES`and `USER` in env.sh
+Fill your  `~/.ssh/config` and then edit `MASTER`, `NODES`and `USER` in env.sh
 
 ```shell
 MASTER="k8s-master-1"
