@@ -44,6 +44,9 @@ if [ "$DELETE_INSTANCE" = true ]; then
     scw instance ip delete "$ip_address"
     echo "Instance $instance_id deleted."
   done
+  scw instance server list
+  scw instance volume list
+  scw instance ip list
   exit 0
 fi
 
@@ -51,7 +54,7 @@ for i in $(seq 1 $INSTANCE_COUNT); do
   INSTANCE_NAME="${INSTANCE_PREFIX}${i}"
   echo "Creating instance $INSTANCE_NAME..."
 
-  scw instance server create zone="fr-par-1" image=$DISTRIBUTION type="$INSTANCE_TYPE" name=$INSTANCE_NAME root-volume=local,10G
+  scw instance server create zone="fr-par-1" image=$DISTRIBUTION type="$INSTANCE_TYPE" name=$INSTANCE_NAME root-volume=local:10GB
   instance_id=$(scw instance server list | grep $INSTANCE_NAME | awk '{print $1}')
   ip_address=$(scw instance server wait "$instance_id" | grep PublicIP.Address | awk '{print $2}')
 

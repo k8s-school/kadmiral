@@ -20,20 +20,20 @@ done
 
 echo "✅ API server is reachable."
 
-echo "⏳ Waiting for all kube-system pods to be ready..."
+echo "⏳ Waiting for all control-plane pods to be ready..."
 
-# Wait until all kube-system pods are in Running or Completed state
+# Wait until all control-plane pods are in Running or Completed state
 while true; do
   if (( $(date +%s) - START_TIME > TIMEOUT )); then
-    echo "❌ Timeout: kube-system pods are not ready after $TIMEOUT seconds."
-    kubectl get pods -n kube-system
+    echo "❌ Timeout: control-plane pods are not ready after $TIMEOUT seconds."
+    kubectl get pods -n kube-system -l tier=control-plane
     exit 1
   fi
 
-  NOT_READY=$(kubectl get pods -n kube-system --no-headers 2>/dev/null | grep -vE 'Running|Completed|STATUS' | wc -l)
+  NOT_READY=$(kubectl get pods -n kube-system -l tier=control-plane --no-headers 2>/dev/null | grep -vE 'Running|Completed|STATUS' | wc -l)
 
   if [ "$NOT_READY" -eq 0 ]; then
-    echo "✅ All kube-system pods are ready."
+    echo "✅ All control-plane pods are ready."
     break
   fi
 
