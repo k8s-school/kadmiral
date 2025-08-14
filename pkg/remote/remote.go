@@ -2,12 +2,14 @@ package remote
 
 import (
 	"fmt"
+	"log/slog"
 	"os/exec"
 	"strings"
 	"sync"
 )
 
 func Rsync(hosts []string, user, key, localDir, remoteDir string) error {
+	slog.Info("rsync start", "hosts", hosts, "source", localDir, "dest", remoteDir)
 	var wg sync.WaitGroup
 	errCh := make(chan error, len(hosts))
 	for _, h := range hosts {
@@ -19,10 +21,15 @@ func Rsync(hosts []string, user, key, localDir, remoteDir string) error {
 			if key != "" {
 				args = append([]string{"-e", fmt.Sprintf("ssh -i %s", key)}, args...)
 			}
+			slog.Info("rsyncing", "host", host)
 			cmd := exec.Command("rsync", args...)
 			if out, err := cmd.CombinedOutput(); err != nil {
-				errCh <- fmt.Errorf("rsync %s: %v: %s", host, err, strings.TrimSpace(string(out)))
+				msg := strings.TrimSpace(string(out))
+				slog.Error("rsync failed", "host", host, "err", err, "output", msg)
+				errCh <- fmt.Errorf("rsync %s: %v: %s", host, err, msg)
+				return
 			}
+			slog.Info("rsync complete", "host", host)
 		}()
 	}
 	wg.Wait()
@@ -34,6 +41,7 @@ func Rsync(hosts []string, user, key, localDir, remoteDir string) error {
 }
 
 func RunScript(hosts []string, user, key, scriptPath string) error {
+	slog.Info("run script", "script", scriptPath, "hosts", hosts)
 	var wg sync.WaitGroup
 	errCh := make(chan error, len(hosts))
 	for _, h := range hosts {
@@ -46,10 +54,15 @@ func RunScript(hosts []string, user, key, scriptPath string) error {
 				sshArgs = append(sshArgs, "-i", key)
 			}
 			sshArgs = append(sshArgs, fmt.Sprintf("%s@%s", user, host), "sudo", "bash", scriptPath)
+			slog.Info("exec script", "host", host)
 			cmd := exec.Command("ssh", sshArgs...)
 			if out, err := cmd.CombinedOutput(); err != nil {
-				errCh <- fmt.Errorf("ssh %s: %v: %s", host, err, strings.TrimSpace(string(out)))
+				msg := strings.TrimSpace(string(out))
+				slog.Error("script failed", "host", host, "err", err, "output", msg)
+				errCh <- fmt.Errorf("ssh %s: %v: %s", host, err, msg)
+				return
 			}
+			slog.Info("script complete", "host", host)
 		}()
 	}
 	wg.Wait()
@@ -61,6 +74,7 @@ func RunScript(hosts []string, user, key, scriptPath string) error {
 }
 
 func RunCommand(hosts []string, user, key, command string) error {
+	slog.Info("run command", "command", command, "hosts", hosts)
 	var wg sync.WaitGroup
 	errCh := make(chan error, len(hosts))
 	for _, h := range hosts {
@@ -73,10 +87,15 @@ func RunCommand(hosts []string, user, key, command string) error {
 				sshArgs = append(sshArgs, "-i", key)
 			}
 			sshArgs = append(sshArgs, fmt.Sprintf("%s@%s", user, host), "sudo", "bash", "-c", command)
+			slog.Info("exec command", "host", host)
 			cmd := exec.Command("ssh", sshArgs...)
 			if out, err := cmd.CombinedOutput(); err != nil {
-				errCh <- fmt.Errorf("ssh %s: %v: %s", host, err, strings.TrimSpace(string(out)))
+				msg := strings.TrimSpace(string(out))
+				slog.Error("command failed", "host", host, "err", err, "output", msg)
+				errCh <- fmt.Errorf("ssh %s: %v: %s", host, err, msg)
+				return
 			}
+			slog.Info("command complete", "host", host)
 		}()
 	}
 	wg.Wait()

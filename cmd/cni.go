@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"path/filepath"
 
 	"github.com/example/kadmiral/pkg/remote"
@@ -24,8 +25,13 @@ var cniInstallCmd = &cobra.Command{
 		if len(hosts) == 0 {
 			return fmt.Errorf("no nodes specified")
 		}
+		slog.Info("installing CNI", "name", name, "node", hosts[0])
 		// assume CNI is installed on control plane first node
-		return remote.RunScript([]string{hosts[0]}, SSHUser, SSHKey, script)
+		if err := remote.RunScript([]string{hosts[0]}, SSHUser, SSHKey, script); err != nil {
+			return err
+		}
+		slog.Info("CNI installed", "name", name)
+		return nil
 	},
 }
 

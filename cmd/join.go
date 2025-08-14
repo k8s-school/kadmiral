@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/example/kadmiral/pkg/remote"
 	"github.com/spf13/cobra"
@@ -37,7 +38,12 @@ var joinNodeCmd = &cobra.Command{
 			hosts = []string{args[0]}
 		}
 		command := fmt.Sprintf("kubeadm join %s --token %s --discovery-token-ca-cert-hash sha256:%s", joinMaster, joinToken, joinHash)
-		return remote.RunCommand(hosts, SSHUser, SSHKey, command)
+		slog.Info("joining nodes", "nodes", hosts, "master", joinMaster)
+		if err := remote.RunCommand(hosts, SSHUser, SSHKey, command); err != nil {
+			return err
+		}
+		slog.Info("nodes joined", "nodes", hosts)
+		return nil
 	},
 }
 

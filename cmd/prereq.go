@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"path/filepath"
 
 	"github.com/example/kadmiral/pkg/remote"
@@ -19,7 +20,12 @@ var prereqCmd = &cobra.Command{
 			return fmt.Errorf("no nodes specified")
 		}
 		script := filepath.Join("/tmp/kadmiral/resource", prereqOS, "prereq.sh")
-		return remote.RunScript(hosts, SSHUser, SSHKey, script)
+		slog.Info("running prerequisites", "os", prereqOS, "nodes", hosts)
+		if err := remote.RunScript(hosts, SSHUser, SSHKey, script); err != nil {
+			return err
+		}
+		slog.Info("prerequisites complete")
+		return nil
 	},
 }
 

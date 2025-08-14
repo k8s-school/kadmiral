@@ -42,4 +42,5 @@ kadmiral reset --all
 ```
 
 The CLI uses SSH to copy the repository to each node and execute the relevant
-scripts concurrently.
+scripts concurrently. Logging is provided via Go's `slog` with a `--log-level`
+flag for controlling verbosity.

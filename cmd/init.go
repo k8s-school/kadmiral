@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/example/kadmiral/pkg/remote"
 	"github.com/spf13/cobra"
@@ -21,7 +22,12 @@ var initCmd = &cobra.Command{
 			}
 			host = hosts[0]
 		}
-		return remote.RunScript([]string{host}, SSHUser, SSHKey, "/tmp/kadmiral/resource/init.sh")
+		slog.Info("initializing control plane", "node", host)
+		if err := remote.RunScript([]string{host}, SSHUser, SSHKey, "/tmp/kadmiral/resource/init.sh"); err != nil {
+			return err
+		}
+		slog.Info("control plane initialized", "node", host)
+		return nil
 	},
 }
 

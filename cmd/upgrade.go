@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/example/kadmiral/pkg/remote"
 	"github.com/spf13/cobra"
@@ -15,7 +16,12 @@ var upgradeCmd = &cobra.Command{
 		if len(hosts) == 0 {
 			return fmt.Errorf("no nodes specified")
 		}
-		return remote.RunScript(hosts, SSHUser, SSHKey, "/tmp/kadmiral/upgrade.sh")
+		slog.Info("upgrading cluster", "nodes", hosts)
+		if err := remote.RunScript(hosts, SSHUser, SSHKey, "/tmp/kadmiral/upgrade.sh"); err != nil {
+			return err
+		}
+		slog.Info("upgrade complete", "nodes", hosts)
+		return nil
 	},
 }
 
