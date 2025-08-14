@@ -4,13 +4,22 @@ A few Ubuntu instances with `ss` and `sudo` access
 
 # Configure access to the instances
 
-Fill your  `~/.ssh/config` and then edit `MASTER` `NODES`and `USER` in env.sh
+Fill your `~/.ssh/config` and edit `config.yaml` with the master, nodes, and
+user information:
 
-```shell
-MASTER="k8s-master-1"
-NODES="k8s-node1 harbor-node2"
-
+```yaml
+distrib: ubuntu
+master: k8s-master-1
+nodes:
+  - k8s-node1
+  - harbor-node2
+user: root
+scp: scp
+ssh: ssh
 ```
+
+When `kadmiral rsync` runs, it generates an `env.sh` file from this configuration
+on each node before executing the scripts.
 
 # Manage the cluster
 

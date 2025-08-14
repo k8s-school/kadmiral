@@ -6,13 +6,25 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
+type Config struct {
+	Distrib string   `yaml:"distrib"`
+	Master  string   `yaml:"master"`
+	Nodes   []string `yaml:"nodes"`
+	User    string   `yaml:"user"`
+	SCP     string   `yaml:"scp"`
+	SSH     string   `yaml:"ssh"`
+}
+
 var (
-	SSHUser  string
-	SSHKey   string
-	Nodes    []string
-	logLevel string
+	SSHUser   string
+	SSHKey    string
+	Nodes     []string
+	logLevel  string
+	cfgFile   string
+	AppConfig Config
 )
 
 var rootCmd = &cobra.Command{
@@ -49,6 +61,10 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&SSHKey, "key", "", "Path to SSH private key")
 	rootCmd.PersistentFlags().StringSliceVar(&Nodes, "nodes", []string{}, "Comma separated list of nodes")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "log level (debug, info, warn, error)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config.yaml", "Path to config file")
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		return loadConfig()
+	}
 }
 
 func nodeList() []string {
@@ -59,4 +75,21 @@ func nodeList() []string {
 		}
 	}
 	return list
+}
+
+func loadConfig() error {
+	data, err := os.ReadFile(cfgFile)
+	if err != nil {
+		return err
+	}
+	if err := yaml.Unmarshal(data, &AppConfig); err != nil {
+		return err
+	}
+	if SSHUser == "root" && AppConfig.User != "" {
+		SSHUser = AppConfig.User
+	}
+	if len(Nodes) == 0 && len(AppConfig.Nodes) > 0 {
+		Nodes = AppConfig.Nodes
+	}
+	return nil
 }

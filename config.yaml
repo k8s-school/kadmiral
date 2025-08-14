@@ -1,0 +1,9 @@
+distrib: ubuntu
+master: harbor-pod-1
+nodes:
+  - harbor-kub1
+  - harbor-kub2
+user: ubuntu
+scp: scp
+ssh: ssh
+
