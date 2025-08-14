@@ -23,13 +23,17 @@ func Rsync(hosts []string, user, key, localDir, remoteDir string) error {
 			}
 			slog.Info("rsyncing", "host", host)
 			cmd := exec.Command("rsync", args...)
-			if out, err := cmd.CombinedOutput(); err != nil {
+			slog.Debug("rsync command", "host", host, "args", args)
+			out := []byte{}
+			err := error(nil)
+			if out, err = cmd.CombinedOutput(); err != nil {
 				msg := strings.TrimSpace(string(out))
 				slog.Error("rsync failed", "host", host, "err", err, "output", msg)
 				errCh <- fmt.Errorf("rsync %s: %v: %s", host, err, msg)
 				return
 			}
 			slog.Info("rsync complete", "host", host)
+			slog.Debug("rsync output", "host", host, "output", string(out))
 		}()
 	}
 	wg.Wait()

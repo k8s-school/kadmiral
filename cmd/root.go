@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/k8s-school/ciux/log"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -22,7 +23,7 @@ var (
 	SSHUser   string
 	SSHKey    string
 	Nodes     []string
-	logLevel  string
+	verbosity int
 	cfgFile   string
 	AppConfig Config
 )
@@ -36,23 +37,9 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	var level slog.Level
-	switch strings.ToLower(logLevel) {
-	case "debug":
-		level = slog.LevelDebug
-	case "warn":
-		level = slog.LevelWarn
-	case "error":
-		level = slog.LevelError
-	default:
-		level = slog.LevelInfo
-	}
-	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level})
-	logger := slog.New(handler)
-	slog.SetDefault(logger)
 
 	if err := rootCmd.Execute(); err != nil {
-		logger.Error("command failed", "err", err)
+		slog.Error("command failed", "err", err)
 	}
 }
 
@@ -60,8 +47,11 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&SSHUser, "user", "root", "SSH user")
 	rootCmd.PersistentFlags().StringVar(&SSHKey, "key", "", "Path to SSH private key")
 	rootCmd.PersistentFlags().StringSliceVar(&Nodes, "nodes", []string{}, "Comma separated list of nodes")
-	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "log level (debug, info, warn, error)")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config.yaml", "Path to config file")
+
+	rootCmd.PersistentFlags().IntVarP(&verbosity, "verbosity", "v", 0, "Verbosity level (-v0 for minimal, -v2 for maximum)")
+	cobra.OnInitialize(initLogger)
+
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		return loadConfig()
 	}
@@ -92,4 +82,9 @@ func loadConfig() error {
 		Nodes = AppConfig.Nodes
 	}
 	return nil
+}
+
+// setUpLogs set the log output ans the log level
+func initLogger() {
+	log.Init(verbosity)
 }
