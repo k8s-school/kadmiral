@@ -25,3 +25,21 @@ NODES="k8s-node1 harbor-node2"
 ssh k8s-master-1
 kubectl get pods -A
 ```
+
+# Go based CLI
+
+The `kadmiral` command wraps these scripts and runs them in parallel over SSH.
+Example usage:
+
+```shell
+kadmiral --nodes master1,node1,node2 --user root rsync
+kadmiral prereq --os ubuntu
+kadmiral init --node master1
+kadmiral cni install cilium
+kadmiral join node node2 --master master1:6443 --token <token> --ca-hash <hash>
+kadmiral reset node2
+kadmiral reset --all
+```
+
+The CLI uses SSH to copy the repository to each node and execute the relevant
+scripts concurrently.
