@@ -1,1 +1,1 @@
-env.scw.sh
+env.scigne.sh

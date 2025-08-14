@@ -1,25 +1,27 @@
 # Pre-requisites
 
-Get 3 or 4 GCE instances
+A few Ubuntu instances with `ss` and `sudo` access
 
-# Upgrade using kubeadm file
+# Configure access to the instances
+
+Fill your  `~/.ssh/config` and then edit `MASTER` `NODES`and `USER` in env.sh
 
 ```shell
-sudo kubeadm upgrade apply --config /etc/kubeadm/kubeadm-config.yaml
+MASTER="k8s-master-1"
+NODES="k8s-node1 harbor-node2"
+
 ```
 
-# Set up access to gce instances
+# Manage the cluster
 
 ```shell
-# It will not work with kubectl for api-server access
-#because of SSL certs (localhost is not recognized)
-# but it can be used with a 'port-forward' to a pod
-NODE=clus0-0
-gcloud compute ssh  --ssh-flag="-L 3000:localhost:3000" "$NODE"
+# Create the cluster
+./create.sh
 
-# It will not work with kubectl for api-server access
-# because of SSL certs (external and internal address for instance are different
-gcloud compute firewall-rules create apiserver --allow tcp:6443
-mkdir -p $HOME/.kube
-gcloud compute scp $NODE:~/.kube/config $HOME/.kube/config
+# Reset the cluster
+./reset.sh
+
+# Connect to k8s
+ssh k8s-master-1
+kubectl get pods -A
 ```

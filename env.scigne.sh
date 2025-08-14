@@ -1,8 +1,8 @@
 # DISTRIB="centos"
 DISTRIB="ubuntu"
 
-MASTER="harbor-kub2"
-NODES="harbor-pod-1 harbor-pod-2 harbor-pod-3"
+MASTER="harbor-pod-1"
+NODES="harbor-kub1 harbor-kub2"
 
 USER=ubuntu
 
