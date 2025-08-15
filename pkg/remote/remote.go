@@ -21,9 +21,9 @@ func RunScript(hosts []string, user, key, script string, deps []string) error {
 			defer wg.Done()
 
 			for _, file := range append([]string{script}, deps...) {
-				if err := uploadScript(host, user, key, file, errCh); err != nil {
+				if err := uploadScript(host, user, key, file); err != nil {
 					slog.Error("failed to upload script", "host", host, "script", file, "err", err)
-					errCh <-err
+					errCh <- err
 					return
 				}
 			}
@@ -34,7 +34,7 @@ func RunScript(hosts []string, user, key, script string, deps []string) error {
 			}
 			scriptPath := "/tmp/kubeadm/" + script
 			sshArgs = append(sshArgs, fmt.Sprintf("%s@%s", user, host), "bash", scriptPath)
-			slog.Info("exec script", "host", host, "script", scriptPath))
+			slog.Info("exec script", "host", host, "script", scriptPath)
 			cmd := exec.Command("ssh", sshArgs...)
 			if out, err := cmd.CombinedOutput(); err != nil {
 				msg := strings.TrimSpace(string(out))
