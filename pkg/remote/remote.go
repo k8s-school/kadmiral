@@ -84,5 +84,5 @@ func uploadScript(host string, user, key, script string) error {
 		return fmt.Errorf("copy script to %s: %v: %s", host, err, msg)
 	}
 	slog.Debug("script copied", "host", host, "path", remotePath)
-	return
+	return nil
 }
