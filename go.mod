@@ -1,4 +1,4 @@
-module github.com/example/kadmiral
+module github.com/k8s-school/kadmiral
 
 go 1.21
 
