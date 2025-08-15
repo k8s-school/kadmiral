@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/example/kadmiral/pkg/remote"
+	"github.com/k8s-school/kadmiral/pkg/remote"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ var initCmd = &cobra.Command{
 			host = hosts[0]
 		}
 		slog.Info("initializing control plane", "node", host)
-		if err := remote.RunScript([]string{host}, SSHUser, SSHKey, "/tmp/kadmiral/resource/init.sh"); err != nil {
+		if err := remote.RunScript([]string{host}, SSHUser, SSHKey, "init.sh"); err != nil {
 			return err
 		}
 		slog.Info("control plane initialized", "node", host)
