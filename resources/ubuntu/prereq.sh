@@ -89,8 +89,9 @@ EOF
 #
 HELM_VERSION=3.9.0
 wget -O /tmp/helm.tgz https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz
-cd /tmp
-tar zxvf /tmp/helm.tgz
+mkdir -p /tmp/helm-install
+tar zxvf /tmp/helm.tgz -C /tmp/helm-install
 rm /tmp/helm.tgz
-chmod +x /tmp/linux-amd64/helm
-mv /tmp/linux-amd64/helm /usr/local/bin/helm
+chmod +x /tmp/helm-install/linux-amd64/helm
+sudo mv /tmp/helm-install/linux-amd64/helm /usr/local/bin/helm
+rm -rf /tmp/helm-install
