@@ -23,7 +23,7 @@ var initCmd = &cobra.Command{
 			host = hosts[0]
 		}
 		slog.Info("initializing control plane", "node", host)
-		if err := remote.RunScript([]string{host}, SSHUser, SSHKey, "init.sh"); err != nil {
+		if err := remote.RunScript([]string{host}, SSHUser, SSHKey, "init.sh", []string{"kubeadm-config.yaml", "tokens.csv", "wait-for-master.sh"}); err != nil {
 			return err
 		}
 		slog.Info("control plane initialized", "node", host)

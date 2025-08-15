@@ -39,7 +39,7 @@ var joinNodeCmd = &cobra.Command{
 		}
 		command := fmt.Sprintf("kubeadm join %s --token %s --discovery-token-ca-cert-hash sha256:%s", joinMaster, joinToken, joinHash)
 		slog.Info("joining nodes", "nodes", hosts, "master", joinMaster)
-		if err := remote.RunScript(hosts, SSHUser, SSHKey, command); err != nil {
+		if err := remote.RunScript(hosts, SSHUser, SSHKey, command, nil); err != nil {
 			return err
 		}
 		slog.Info("nodes joined", "nodes", hosts)

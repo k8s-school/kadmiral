@@ -19,9 +19,9 @@ var prereqCmd = &cobra.Command{
 		if len(hosts) == 0 {
 			return fmt.Errorf("no nodes specified")
 		}
-		script := filepath.Join("/tmp/kadmiral/resource", prereqOS, "prereq.sh")
 		slog.Info("running prerequisites", "os", prereqOS, "nodes", hosts)
-		if err := remote.RunScript(hosts, SSHUser, SSHKey, script); err != nil {
+		script := filepath.Join(prereqOS, "prereq.sh")
+		if err := remote.RunScript(hosts, SSHUser, SSHKey, script, []string{"env.sh"}); err != nil {
 			return err
 		}
 		slog.Info("prerequisites complete")

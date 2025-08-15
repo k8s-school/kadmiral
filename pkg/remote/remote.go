@@ -20,41 +20,16 @@ func RunScript(hosts []string, user, key, script string, deps []string) error {
 		go func() {
 			defer wg.Done()
 
-			scriptPath := "/tmp/kubeadm/" + script
-			slog.Debug("copy script", "host", host, "path", scriptPath)
-			copyCmd := exec.Command(
-				"ssh",
-				append(
-					func() []string {
-						if key != "" {
-							return []string{"-i", key}
-						}
-						return []string{}
-					}(),
-					fmt.Sprintf("%s@%s", user, host),
-					fmt.Sprintf("mkdir -p /tmp/kubeadm && cat > %s", scriptPath),
-				)...,
-			)
-			slog.Debug("copy command", "cmd", copyCmd.String())
-			data, err := resources.Fs.ReadFile(script)
-			if err != nil {
-				slog.Error("failed to read script", "script", script, "err", err)
-				errCh <- fmt.Errorf("read script %s: %v", script, err)
-				return
-			}
+			for _, file := range append([]string{script}, deps...) {
 
-			copyCmd.Stdin = strings.NewReader(string(data))
-			if out, err := copyCmd.CombinedOutput(); err != nil {
-				msg := strings.TrimSpace(string(out))
-				slog.Error("failed to copy script", "host", host, "err", err, "output", msg)
-				errCh <- fmt.Errorf("copy script to %s: %v: %s", host, err, msg)
-				return
+				uploadScript(host, user, key, file, errCh)
 			}
 
 			sshArgs := []string{}
 			if key != "" {
 				sshArgs = append(sshArgs, "-i", key)
 			}
+			scriptPath := "/tmp/kubeadm/" + script
 			sshArgs = append(sshArgs, fmt.Sprintf("%s@%s", user, host), "bash", scriptPath)
 			slog.Info("exec script", "host", host)
 			cmd := exec.Command("ssh", sshArgs...)
@@ -62,7 +37,6 @@ func RunScript(hosts []string, user, key, script string, deps []string) error {
 				msg := strings.TrimSpace(string(out))
 				slog.Error("script failed", "host", host, "err", err, "output", msg)
 				errCh <- fmt.Errorf("ssh %s: %v: %s", host, err, msg)
-				return
 			}
 			slog.Info("script complete", "host", host)
 		}()
@@ -73,4 +47,38 @@ func RunScript(hosts []string, user, key, script string, deps []string) error {
 		return err
 	}
 	return nil
+}
+
+func uploadScript(host string, user, key, script string, errCh chan error) {
+
+	slog.Debug("copy script", "host", host, "path", script)
+	remotePath := "/tmp/kubeadm/" + script
+	copyCmd := exec.Command(
+		"ssh",
+		append(
+			func() []string {
+				if key != "" {
+					return []string{"-i", key}
+				}
+				return []string{}
+			}(),
+			fmt.Sprintf("%s@%s", user, host),
+			fmt.Sprintf("mkdir -p /tmp/kubeadm/ubuntu && cat > %s", remotePath),
+		)...,
+	)
+	slog.Debug("copy command", "cmd", copyCmd.String())
+	data, err := resources.Fs.ReadFile(script)
+	if err != nil {
+		slog.Error("failed to read script", "script", script, "err", err)
+		errCh <- fmt.Errorf("read script %s: %v", script, err)
+	}
+
+	copyCmd.Stdin = strings.NewReader(string(data))
+	if out, err := copyCmd.CombinedOutput(); err != nil {
+		msg := strings.TrimSpace(string(out))
+		slog.Error("failed to copy script", "host", host, "err", err, "output", msg)
+		errCh <- fmt.Errorf("copy script to %s: %v: %s", host, err, msg)
+	}
+	slog.Debug("script copied", "host", host, "path", remotePath)
+	return
 }

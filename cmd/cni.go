@@ -27,7 +27,7 @@ var cniInstallCmd = &cobra.Command{
 		}
 		slog.Info("installing CNI", "name", name, "node", hosts[0])
 		// assume CNI is installed on control plane first node
-		if err := remote.RunScript([]string{hosts[0]}, SSHUser, SSHKey, script); err != nil {
+		if err := remote.RunScript([]string{hosts[0]}, SSHUser, SSHKey, script, nil); err != nil {
 			return err
 		}
 		slog.Info("CNI installed", "name", name)

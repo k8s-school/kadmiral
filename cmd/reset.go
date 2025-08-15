@@ -27,7 +27,7 @@ var resetCmd = &cobra.Command{
 			hosts = []string{args[0]}
 		}
 		slog.Info("resetting nodes", "nodes", hosts)
-		if err := remote.RunScript(hosts, SSHUser, SSHKey, "/tmp/kadmiral/resource/reset.sh"); err != nil {
+		if err := remote.RunScript(hosts, SSHUser, SSHKey, "reset.sh", nil); err != nil {
 			return err
 		}
 		slog.Info("reset complete", "nodes", hosts)
