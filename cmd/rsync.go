@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/example/kadmiral/pkg/remote"
+	"github.com/k8s-school/kadmiral/pkg/remote"
 	"github.com/spf13/cobra"
 )
 
