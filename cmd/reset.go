@@ -17,18 +17,17 @@ var resetCmd = &cobra.Command{
 	Short: "reset nodes using reset.sh",
 	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		hosts := []string{}
-		if resetAll {
-			hosts = nodeList()
+
+		var hosts []string
+		if len(args) == 0 {
+			hosts = append(AppConfig.ControlPlaneNodes, AppConfig.WorkerNodes...)
 		} else {
-			if len(args) != 1 {
-				return fmt.Errorf("node name required unless --all is set")
-			}
 			hosts = []string{args[0]}
 		}
+
 		slog.Info("resetting nodes", "nodes", hosts)
-		if err := remote.RunScript(hosts, SSHUser, SSHKey, "reset.sh", nil); err != nil {
-			return err
+		if _, err := remote.RunParallel(hosts, AppConfig.SSHUser, AppConfig.SSHKey, "reset.sh", nil); err != nil {
+			return fmt.Errorf("failed to reset nodes: %v", err)
 		}
 		slog.Info("reset complete", "nodes", hosts)
 		return nil
@@ -36,6 +35,5 @@ var resetCmd = &cobra.Command{
 }
 
 func init() {
-	resetCmd.Flags().BoolVar(&resetAll, "all", false, "reset all nodes")
 	rootCmd.AddCommand(resetCmd)
 }

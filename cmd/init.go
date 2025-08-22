@@ -8,13 +8,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var initNode string
-
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "initialize the control plane",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		host := initNode
+		host := AppConfig.ControlPlaneNodes[0]
 		if host == "" {
 			hosts := nodeList()
 			if len(hosts) == 0 {
@@ -23,8 +21,8 @@ var initCmd = &cobra.Command{
 			host = hosts[0]
 		}
 		slog.Info("initializing control plane", "node", host)
-		if err := remote.RunScript([]string{host}, SSHUser, SSHKey, "init.sh", []string{"kubeadm-config.yaml", "tokens.csv", "wait-for-master.sh"}); err != nil {
-			return err
+		if _, err := remote.RunParallel([]string{host}, AppConfig.SSHUser, AppConfig.SSHKey, "init.sh", []string{"kubeadm-config.yaml", "tokens.csv", "wait-for-master.sh"}); err != nil {
+			return err[0]
 		}
 		slog.Info("control plane initialized", "node", host)
 		return nil
@@ -32,6 +30,5 @@ var initCmd = &cobra.Command{
 }
 
 func init() {
-	initCmd.Flags().StringVar(&initNode, "node", "", "control plane node")
 	rootCmd.AddCommand(initCmd)
 }

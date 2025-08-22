@@ -11,18 +11,16 @@ import (
 )
 
 type Config struct {
-	Distrib string   `yaml:"distrib"`
-	Master  string   `yaml:"master"`
-	Nodes   []string `yaml:"nodes"`
-	User    string   `yaml:"user"`
-	SCP     string   `yaml:"scp"`
-	SSH     string   `yaml:"ssh"`
+	Distrib           string   `yaml:"distrib"`
+	ControlPlaneNodes []string `yaml:"control-plane"`
+	WorkerNodes       []string `yaml:"worker"`
+	SSHUser           string   `yaml:"user"`
+	SSHKey            string   `yaml:"key"`
+	SCP               string   `yaml:"scp"`
+	SSH               string   `yaml:"ssh"`
 }
 
 var (
-	SSHUser   string
-	SSHKey    string
-	Nodes     []string
 	verbosity int
 	cfgFile   string
 	AppConfig Config
@@ -44,11 +42,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&SSHUser, "user", "root", "SSH user")
-	rootCmd.PersistentFlags().StringVar(&SSHKey, "key", "", "Path to SSH private key")
-	rootCmd.PersistentFlags().StringSliceVar(&Nodes, "nodes", []string{}, "Comma separated list of nodes")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config.yaml", "Path to config file")
-
 	rootCmd.PersistentFlags().IntVarP(&verbosity, "verbosity", "v", 0, "Verbosity level (-v0 for minimal, -v2 for maximum)")
 	cobra.OnInitialize(initLogger)
 
@@ -59,7 +53,7 @@ func init() {
 
 func nodeList() []string {
 	var list []string
-	for _, n := range Nodes {
+	for _, n := range AppConfig.WorkerNodes {
 		if trimmed := strings.TrimSpace(n); trimmed != "" {
 			list = append(list, trimmed)
 		}
@@ -74,12 +68,6 @@ func loadConfig() error {
 	}
 	if err := yaml.Unmarshal(data, &AppConfig); err != nil {
 		return err
-	}
-	if SSHUser == "root" && AppConfig.User != "" {
-		SSHUser = AppConfig.User
-	}
-	if len(Nodes) == 0 && len(AppConfig.Nodes) > 0 {
-		Nodes = AppConfig.Nodes
 	}
 	return nil
 }

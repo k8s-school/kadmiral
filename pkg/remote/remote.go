@@ -10,10 +10,11 @@ import (
 	"github.com/k8s-school/kadmiral/resources"
 )
 
-func RunScript(hosts []string, user, key, script string, deps []string) error {
+func RunParallel(hosts []string, user, key, script string, deps []string) ([]string, []error) {
 	slog.Info("run script", "script", script, "hosts", hosts)
 	var wg sync.WaitGroup
 	errCh := make(chan error, len(hosts))
+	outCh := make(chan string, len(hosts))
 	for _, h := range hosts {
 		host := h
 		wg.Add(1)
@@ -28,29 +29,46 @@ func RunScript(hosts []string, user, key, script string, deps []string) error {
 				}
 			}
 
-			sshArgs := []string{}
-			if key != "" {
-				sshArgs = append(sshArgs, "-i", key)
-			}
-			scriptPath := "/tmp/kubeadm/" + script
-			sshArgs = append(sshArgs, fmt.Sprintf("%s@%s", user, host), "bash", scriptPath)
-			slog.Info("exec script", "host", host, "script", scriptPath)
-			cmd := exec.Command("ssh", sshArgs...)
-			if out, err := cmd.CombinedOutput(); err != nil {
-				msg := strings.TrimSpace(string(out))
-				slog.Error("script failed", "host", host, "err", err, "output", msg)
+			out, err := RunScript(host, user, key, script, deps)
+			msg := strings.TrimSpace(string(out))
+			outCh <- fmt.Sprintf("host %s: %s", host, msg)
+			if err != nil {
 				errCh <- fmt.Errorf("ssh %s: %v: %s", host, err, msg)
-				return
 			}
-			slog.Info("script complete", "host", host)
 		}()
 	}
 	wg.Wait()
 	close(errCh)
-	for err := range errCh {
-		return err
+	close(outCh)
+	var outputs []string
+	for msg := range outCh {
+		outputs = append(outputs, msg)
 	}
-	return nil
+	var errs []error
+	for err := range errCh {
+		errs = append(errs, err)
+	}
+	return outputs, errs
+}
+
+func RunScript(host string, user, key, script string, deps []string) ([]byte, error) {
+	sshArgs := []string{}
+	if key != "" {
+		sshArgs = append(sshArgs, "-i", key)
+	}
+	scriptPath := "/tmp/kubeadm/" + script
+	sshArgs = append(sshArgs, fmt.Sprintf("%s@%s", user, host), "bash", scriptPath)
+	slog.Info("exec script", "host", host, "script", scriptPath)
+	cmd := exec.Command("ssh", sshArgs...)
+	out, err := cmd.CombinedOutput()
+
+	if err != nil {
+		msg := strings.TrimSpace(string(out))
+		slog.Error("script failed", "host", host, "err", err, "output", msg)
+	} else {
+		slog.Info("script complete", "host", host)
+	}
+	return out, err
 }
 
 func uploadScript(host string, user, key, script string) error {

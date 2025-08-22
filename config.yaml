@@ -1,6 +1,9 @@
 distrib: ubuntu
-master: harbor-pod-1
-nodes:
+control-plane:
+  - harbor-pod-1
+  - harbor-pod-2
+  - harbor-pod-3
+worker:
   - harbor-kub1
   - harbor-kub2
 user: ubuntu
