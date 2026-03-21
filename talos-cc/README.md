@@ -1,6 +1,18 @@
 . ~/.novacreds/fink-openrc.sh
 . ~/openstack_cli/bin/activate
 
+# Create bastion
+
+openstack keypair create --public-key ~/.ssh/id_rsa.pub fjammes-key
+openstack server create --image "official-ubuntu-24.04-x86_64"   --flavor m1.small   --network fink-public   --network fink  --security-group talos   --key-name fjammes-key talos-bastion
+BASTION_IP=$(openstack server show talos-bastion -f json -c addresses | jq -r '.addresses."fink-public"[0]')
+ssh ubuntu@$BASTION_IP
+mkdir /home/ubuntu/.novacreds
+scp $HOME$/.novacreds/fink-openrc.sh $BASTION_IP:/home/ubuntu/.novacreds
+scp $HOME/.talos/config  ubuntu@134.158.243.160:/home/ubuntu/.talos
+sudo apt update && sudo apt install -y python3-openstackclient
+git clone https://github.com/k8s-school/kadmiral.git
+
 ## Create talos image
 
 ```
@@ -68,19 +80,8 @@ openstack security group rule list talos
 
 ## Create vm
 
-# Create bastion
-
-openstack keypair create --public-key ~/.ssh/id_rsa.pub fjammes-key
-openstack server create --image "official-ubuntu-24.04-x86_64"   --flavor m1.small   --network fink-public   --security-group talos   --key-name fjammes-key talos-bastion
-BASTION_IP=$(openstack server show talos-bastion -f json -c addresses | jq -r '.addresses."fink-public"[0]')
-ssh ubuntu@$BASTION_IP
-mkdir /home/ubuntu/.novacreds
-scp $HOME$/.novacreds/fink-openrc.sh $BASTION_IP:/home/ubuntu/.novacreds
-sudo apt update && sudo apt install -y python3-openstackclient
-
-
 openstack server create --flavor m1.medium --image talos --network fink --security-group talos --user-data controlplane-final.yaml talos-master-1
 
 CONTROL_PLANE_IP=$(openstack server show talos-master-1 -f json -c addresses | jq -r '.addresses.fink[0]')
-talosctl --talosconfig talosconfig config endpoint $CONTROL_PLANE_IP
-talosctl --talosconfig talosconfig config node $CONTROL_PLANE_IP
+talosctl config endpoint $CONTROL_PLANE_IP
+talosctl config node $CONTROL_PLANE_IP
