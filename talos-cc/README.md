@@ -22,3 +22,36 @@ openstack port create --network fink --fixed-ip ip-address=10.180.15.250 talos-v
 ## Install talosctl
 
 curl -Lo talosctl https://github.com/siderolabs/talos/releases/download/v1.12.6/talosctl-linux-amd64
+
+talosctl gen config fink-cluster https://10.180.15.250:6443
+
+talosctl machineconfig patch controlplane.yaml --patch @patch-vip.yaml -o controlplane-final.yaml
+
+talosctl config merge ./talosconfig
+talosctl config endpoint 10.180.15.250
+talosctl config node 10.180.15.250
+talosctl config context fink-cluster
+cat ~/.talos/config
+
+
+## Security group
+
+openstack security group create talos --description "Security group for Talos cluster (VIP 10.180.15.250)"
+
+# Talos API: Required for talosctl (bootstrap, upgrade, dashboard)
+openstack security group rule create --protocol tcp --dst-port 50000 --remote-ip 0.0.0.0/0 talos
+
+# Kubernetes API: Required for kubectl and cluster interaction
+openstack security group rule create --protocol tcp --dst-port 6443 --remote-ip 0.0.0.0/0 talos
+
+# Allow all TCP traffic within the fink subnet
+openstack security group rule create --protocol tcp --remote-ip 10.180.15.0/24 talos
+
+# Allow all UDP traffic within the fink subnet (required for DNS and VXLAN/CNI)
+openstack security group rule create --protocol udp --remote-ip 10.180.15.0/24 talos
+
+# Allow ICMP (Ping) for network diagnostics and troubleshooting
+openstack security group rule create --protocol icmp --remote-ip 10.180.15.0/24 talos
+
+# VRRP Protocol (112): Essential for the Virtual IP (10.180.15.250) failover mechanism
+openstack security group rule create --protocol 112 --remote-ip 10.180.15.0/24 talos

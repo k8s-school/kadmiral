@@ -1,0 +1,5 @@
+controlplane-final.yaml
+controlplane.yaml
+patch-vip.yaml
+talosconfig
+worker.yaml
