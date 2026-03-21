@@ -22,6 +22,8 @@ openstack port create --network fink --fixed-ip ip-address=10.180.15.250 talos-v
 ## Install talosctl
 
 curl -Lo talosctl https://github.com/siderolabs/talos/releases/download/v1.12.6/talosctl-linux-amd64
+chmod +x talosctl
+mv talosctl ./bin/
 
 talosctl gen config fink-cluster https://10.180.15.250:6443
 
@@ -55,3 +57,30 @@ openstack security group rule create --protocol icmp --remote-ip 10.180.15.0/24 
 
 # VRRP Protocol (112): Essential for the Virtual IP (10.180.15.250) failover mechanism
 openstack security group rule create --protocol 112 --remote-ip 10.180.15.0/24 talos
+
+# ICMP
+openstack security group rule create --proto icmp talos
+
+# SSH
+openstack security group rule create --proto tcp --dst-port 22 talos
+
+openstack security group rule list talos
+
+## Create vm
+
+# Create bastion
+
+openstack keypair create --public-key ~/.ssh/id_rsa.pub fjammes-key
+openstack server create --image "official-ubuntu-24.04-x86_64"   --flavor m1.small   --network fink-public   --security-group talos   --key-name fjammes-key talos-bastion
+BASTION_IP=$(openstack server show talos-bastion -f json -c addresses | jq -r '.addresses."fink-public"[0]')
+ssh ubuntu@$BASTION_IP
+mkdir /home/ubuntu/.novacreds
+scp $HOME$/.novacreds/fink-openrc.sh $BASTION_IP:/home/ubuntu/.novacreds
+sudo apt update && sudo apt install -y python3-openstackclient
+
+
+openstack server create --flavor m1.medium --image talos --network fink --security-group talos --user-data controlplane-final.yaml talos-master-1
+
+CONTROL_PLANE_IP=$(openstack server show talos-master-1 -f json -c addresses | jq -r '.addresses.fink[0]')
+talosctl --talosconfig talosconfig config endpoint $CONTROL_PLANE_IP
+talosctl --talosconfig talosconfig config node $CONTROL_PLANE_IP
