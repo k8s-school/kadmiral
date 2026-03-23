@@ -43,7 +43,7 @@ mv kubectl ./bin/
 talosctl gen config fink-cluster https://10.180.15.250:6443
 
 talosctl machineconfig patch controlplane.yaml --patch @patch-vip.yaml -o controlplane-vip.yaml
-talosctl machineconfig patch controlplane-vip.yaml --patch @ptp.yaml -o controlplane-ptp.yaml
+talosctl machineconfig patch controlplane-vip.yaml --patch @patch-ptp.yaml -o controlplane-ptp.yaml
 
 mv controlplane-ptp.yaml ontrolplane-final.yaml
 
