@@ -11,6 +11,7 @@ FLAVOR="m1.small"
 NETWORK="fink"
 SEC_GROUP="talos"
 CONFIG_PATH="$DIR/controlplane-final.yaml"
+CP_NODE_PREFIX="talos-control-plane"
 
 VIP_IP=$(openstack port show "$VIP_PORT_NAME" -f json -c fixed_ips | jq -r '.fixed_ips[0].ip_address')
 if [ -z "$VIP_IP" ] || [ "$VIP_IP" == "null" ]; then
@@ -21,11 +22,10 @@ fi
 echo "Found VIP: $VIP_IP"
 
 for i in $(seq 1 3); do
-    VM_NAME="talos-control-plane-$i"
+    VM_NAME="$CP_NODE_PREFIX-$i"
     echo "--- Creating $VM_NAME ---"
 
-    # 1. Create the server
-    # Added --config-drive true to help Talos find metadata in OpenStack
+    # Create the server
     openstack server create "$VM_NAME" \
       --flavor "$FLAVOR" \
       --image "$IMAGE" \
@@ -36,7 +36,7 @@ for i in $(seq 1 3); do
     echo "Waiting a few seconds for port creation..."
     sleep 5
 
-    # 2. Find the Port ID for this specific VM
+    # Find the Port ID for this specific VM
     PORT_ID=$(openstack port list --server "$VM_NAME" -c ID -f value)
 
     if [ -n "$PORT_ID" ]; then
@@ -48,3 +48,23 @@ for i in $(seq 1 3); do
         echo "WARNING: Could not find port for $VM_NAME. You might need to run the port set command manually."
     fi
 done
+
+CP_NODE_1_IP=$(openstack server show "$CP_NODE_PREFIX-1" -c addresses -f value | tr -d "{}'[] " | cut -d: -f2)
+
+if [ -z "$CP_NODE_1_IP" ]; then
+    echo "ERROR: Could not find IP for $CP_NODE_PREFIX-1. check if 'jq' is installed."
+    exit 1
+fi
+
+# Configure talosctl to point to the first control plane node
+talosctl config endpoint "$CP_NODE_1_IP"
+talosctl config node "$CP_NODE_1_IP"
+
+# Bootstrap the cluster using the first control plane node
+talosctl bootstrap
+
+
+# Wait t
+
+
+talosctl kubeconfig . --nodes $CP_NODE_1_IP --endpoints 10.180.15.250

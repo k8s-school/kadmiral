@@ -36,6 +36,10 @@ curl -Lo talosctl https://github.com/siderolabs/talos/releases/download/v1.12.6/
 chmod +x talosctl
 mv talosctl ./bin/
 
+curl -LO https://dl.k8s.io/release/v1.35.0/bin/linux/amd64/kubectl
+chmod +x kubectl
+mv kubectl ./bin/
+
 talosctl gen config fink-cluster https://10.180.15.250:6443
 
 talosctl machineconfig patch controlplane.yaml --patch @patch-vip.yaml -o controlplane-vip.yaml
