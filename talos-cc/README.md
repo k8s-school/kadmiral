@@ -41,6 +41,8 @@ talosctl gen config fink-cluster https://10.180.15.250:6443
 talosctl machineconfig patch controlplane.yaml --patch @patch-vip.yaml -o controlplane-vip.yaml
 talosctl machineconfig patch controlplane-vip.yaml --patch @ptp.yaml -o controlplane-ptp.yaml
 
+mv controlplane-ptp.yaml ontrolplane-final.yaml
+
 talosctl config merge ./talosconfig
 talosctl config endpoint 10.180.15.250
 talosctl config node 10.180.15.250
@@ -80,7 +82,10 @@ openstack security group rule list talos
 
 ## Create vm
 
-openstack server create --flavor m1.medium --image talos --network fink --security-group talos --user-data controlplane-final.yaml talos-master-1
+for i in $( seq 1 3 ); do
+  openstack server create talos-control-plane-$i --flavor m1.small --image talos --network fink --security-group talos --user-data /path/to/controlplane.yaml
+done
+
 openstack console log show talos-master-1
 
 CONTROL_PLANE_IP=$(openstack server show talos-master-1 -f json -c addresses | jq -r '.addresses.fink[0]')
