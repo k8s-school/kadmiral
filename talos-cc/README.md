@@ -6,10 +6,9 @@
 openstack keypair create --public-key ~/.ssh/id_rsa.pub fjammes-key
 openstack server create --image "official-ubuntu-24.04-x86_64"   --flavor m1.small   --network fink-public   --network fink  --security-group talos   --key-name fjammes-key talos-bastion
 BASTION_IP=$(openstack server show talos-bastion -f json -c addresses | jq -r '.addresses."fink-public"[0]')
-ssh ubuntu@$BASTION_IP
-mkdir /home/ubuntu/.novacreds
-scp $HOME$/.novacreds/fink-openrc.sh $BASTION_IP:/home/ubuntu/.novacreds
-scp $HOME/.talos/config  ubuntu@134.158.243.160:/home/ubuntu/.talos
+ssh ubuntu@$BASTION_IP "mkdir /home/ubuntu/.novacreds /home/ubuntu/.talos/"
+scp $HOME/.novacreds/fink-openrc.sh ubuntu@$BASTION_IP:/home/ubuntu/.novacreds/
+scp $HOME/.talos/config  ubuntu@$BASTION_IP:/home/ubuntu/.talos/
 sudo apt update && sudo apt install -y python3-openstackclient
 git clone https://github.com/k8s-school/kadmiral.git
 
@@ -39,7 +38,8 @@ mv talosctl ./bin/
 
 talosctl gen config fink-cluster https://10.180.15.250:6443
 
-talosctl machineconfig patch controlplane.yaml --patch @patch-vip.yaml -o controlplane-final.yaml
+talosctl machineconfig patch controlplane.yaml --patch @patch-vip.yaml -o controlplane-vip.yaml
+talosctl machineconfig patch controlplane-vip.yaml --patch @ptp.yaml -o controlplane-ptp.yaml
 
 talosctl config merge ./talosconfig
 talosctl config endpoint 10.180.15.250
@@ -81,6 +81,7 @@ openstack security group rule list talos
 ## Create vm
 
 openstack server create --flavor m1.medium --image talos --network fink --security-group talos --user-data controlplane-final.yaml talos-master-1
+openstack console log show talos-master-1
 
 CONTROL_PLANE_IP=$(openstack server show talos-master-1 -f json -c addresses | jq -r '.addresses.fink[0]')
 talosctl config endpoint $CONTROL_PLANE_IP

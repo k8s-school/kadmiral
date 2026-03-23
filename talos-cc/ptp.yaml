@@ -1,0 +1,7 @@
+machine:
+  time:
+    servers:
+      - /dev/ptp0
+  kernel:
+    modules:
+      - name: ptp_kvm
