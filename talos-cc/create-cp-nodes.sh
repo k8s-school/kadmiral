@@ -2,13 +2,15 @@
 
 set -euxo pipefail
 
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Configuration
 VIP_PORT_NAME="talos-vip-port"
 IMAGE="talos"
 FLAVOR="m1.small"
 NETWORK="fink"
 SEC_GROUP="talos"
-CONFIG_PATH="/path/to/controlplane.yaml"
+CONFIG_PATH="$DIR/controlplane.yaml"
 
 VIP_IP=$(openstack port show "$VIP_PORT_NAME" -f json -c fixed_ips | jq -r '.fixed_ips[0].ip_address')
 if [ -z "$VIP_IP" ] || [ "$VIP_IP" == "null" ]; then
@@ -29,8 +31,7 @@ for i in $(seq 1 3); do
       --image "$IMAGE" \
       --network "$NETWORK" \
       --security-group "$SEC_GROUP" \
-      --user-data "$CONFIG_PATH" \
-      --config-drive true
+      --user-data "$CONFIG_PATH"
 
     echo "Waiting a few seconds for port creation..."
     sleep 5
