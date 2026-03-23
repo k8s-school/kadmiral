@@ -1,0 +1,1 @@
+git clone -b v1.15.0 https://github.com/kubernetes/cloud-provider-openstack/

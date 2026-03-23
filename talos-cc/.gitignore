@@ -1,5 +1,5 @@
-controlplane-final.yaml
-controlplane.yaml
-patch-vip.yaml
-talosconfig
-worker.yaml
+/cloud.conf
+/controlplane-final.yaml
+/controlplane.yaml
+/talosconfig
+/worker.yaml
