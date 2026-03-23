@@ -12,6 +12,7 @@ NETWORK="fink"
 SEC_GROUP="talos"
 CONFIG_PATH="$DIR/controlplane-final.yaml"
 CP_NODE_PREFIX="talos-control-plane"
+WORKER_NODE_PREFIX="talos-worker"
 
 VIP_IP=$(openstack port show "$VIP_PORT_NAME" -f json -c fixed_ips | jq -r '.fixed_ips[0].ip_address')
 if [ -z "$VIP_IP" ] || [ "$VIP_IP" == "null" ]; then
@@ -63,8 +64,12 @@ talosctl config node "$CP_NODE_1_IP"
 # Bootstrap the cluster using the first control plane node
 talosctl bootstrap
 
+# Create kubeconfig for the cluster
+talosctl kubeconfig
 
-# Wait t
+talosctl machineconfig patch $DIR/worker.yaml --patch @ptp.yaml -o $DIR/worker-ptp.yaml
+cp $DIR/worker-ptp.yaml $DIR/worker-final.yaml
 
-
-talosctl kubeconfig . --nodes $CP_NODE_1_IP --endpoints 10.180.15.250
+for i in $(seq 1 2); do
+    openstack server create "$WORKER_NODE_PREFIX-$i" --flavor "$FLAVOR" --network "$NETWORK" --image "$IMAGE" --security-group "$SEC_GROUP" --user-data $DIR/worker-final.yaml
+done
