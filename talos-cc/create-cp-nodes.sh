@@ -10,7 +10,7 @@ IMAGE="talos"
 FLAVOR="m1.small"
 NETWORK="fink"
 SEC_GROUP="talos"
-CONFIG_PATH="$DIR/controlplane.yaml"
+CONFIG_PATH="$DIR/controlplane-final.yaml"
 
 VIP_IP=$(openstack port show "$VIP_PORT_NAME" -f json -c fixed_ips | jq -r '.fixed_ips[0].ip_address')
 if [ -z "$VIP_IP" ] || [ "$VIP_IP" == "null" ]; then
