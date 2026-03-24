@@ -24,13 +24,4 @@ helm repo add cpo https://kubernetes.github.io/cloud-provider-openstack
 helm repo update
 
 CHART_VERSION="2.35.0"
-helm install cinder-csi cpo/openstack-cinder-csi \
-  --namespace "$NS" \
-  --version "$CHART_VERSION" \
-  --set secret.enabled=true \
-  --set secret.name=cloud-config \
-  --set "csi.plugin.volumes[0].name=cacert" \
-  --set csi.plugin.volumes[0].hostPath.path=/var/lib/cacert
-
-  # Incorrect config, please check
-  https://github.com/kubernetes/cloud-provider-openstack/blob/master/manifests/controller-manager/cloud-config
+helm install cinder-csi cpo/openstack-cinder-csi   --namespace "$NS"   --version "$CHART_VERSION"   -f $DIR/values.yaml

@@ -1,7 +1,0 @@
-[Global]
-auth-url = "https://changeme.in2p3.fr:50"
-username = "changeme"
-password = "changeme"
-project-id = "changeme"
-domain-id = "default"
-region = "regionOne"

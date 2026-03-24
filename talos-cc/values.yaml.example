@@ -1,0 +1,20 @@
+csi:
+  plugin:
+    volumes:
+      - name: cacert
+        hostPath:
+          path: /var/lib/cacert # Modifié pour Talos
+
+secret:
+  enabled: true
+  create: true
+  name: cinder-csi-cloud-config
+  data:
+    cloud.conf: |-
+      [Global]
+      auth-url=https://cckeystone.in2p3.fr:5000
+      domain-name=Default
+      username=changeme
+      password=changeme
+      tenant-id=<project-id>
+      region=regionOne
