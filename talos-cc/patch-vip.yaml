@@ -1,7 +1,0 @@
-machine:
-  network:
-    interfaces:
-      - interface: eth0
-        dhcp: true
-        vip:
-          ip: 10.180.15.250
